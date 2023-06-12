@@ -1,4 +1,6 @@
-#Quá trình thực hiện và cách triển khai
+# Quá trình thực hiện và cách triển khai
+
+Vì không có thời gian nên chỉ làm lúc rảnh mỗi buổi tối và chủ nhật, nên có thể kéo dài tới ngày hôm nay (12/06/2023).
 
 ## I. Quá trình thực hiện
 
