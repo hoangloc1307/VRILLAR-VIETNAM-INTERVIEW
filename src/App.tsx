@@ -1,28 +1,39 @@
 import f1Result from "@/assets/f1ResultData.json";
+import {
+  CategoryScale,
+  Chart as ChartJS,
+  LineElement,
+  LinearScale,
+  PointElement,
+  Tooltip,
+} from "chart.js";
 import { useEffect, useState } from "react";
-import { useNavigate, createSearchParams } from "react-router-dom";
+import { Line } from "react-chartjs-2";
+import { createSearchParams, useNavigate } from "react-router-dom";
 import { TBody, TData, THead, THeading, TRow, Table } from "./components/Table";
 import useQueryParams from "./hooks/useQueryParams";
 import { F1Result } from "./types/f1Result.type";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-} from "chart.js";
-import { Line } from "react-chartjs-2";
 
 ChartJS.register(
   CategoryScale,
   LinearScale,
   PointElement,
   LineElement,
-  Title,
   Tooltip
 );
+
+const options = {
+  maintainAspectRatio: true,
+  scales: {
+    y: {
+      reverse: true,
+      beginAtZero: true,
+      ticks: {
+        stepSize: 1,
+      },
+    },
+  },
+};
 
 type ViewType = "races" | "drivers" | "teams" | "dhlFastestLaps";
 
@@ -73,6 +84,8 @@ export default function App() {
       <h1 className="text-2xl font-bold text-center p-2 uppercase">
         F1 Result
       </h1>
+
+      {/* Filter */}
       <div className="flex justify-center gap-5 mt-2">
         <div>
           <label className="font-medium" htmlFor="yearSelect">
@@ -198,6 +211,7 @@ export default function App() {
       {/* Drivers */}
       {view === "drivers" && (
         <div className="flex flex-col gap-10">
+          {/* Overview */}
           <Table title={`${year} Driver Standings`}>
             <THead>
               <TRow>
@@ -225,6 +239,7 @@ export default function App() {
             </TBody>
           </Table>
 
+          {/* Detail */}
           <Table
             title={`${year} Driver Standings: ${data[year].drivers[currentIndex]?.driver}`}
           >
@@ -255,57 +270,49 @@ export default function App() {
               )}
             </TBody>
           </Table>
+
+          <div>
+            <p className="mb-2 uppercase text-xl font-bold">{`${data[year].drivers[currentIndex]?.driver} postion every year`}</p>
+            <Line
+              height={50}
+              options={options}
+              data={{
+                labels: Object.entries(data).reduce(
+                  (result: string[], current) => {
+                    const x = current[1].drivers.find(
+                      (i) =>
+                        i.driver === data[year].drivers[currentIndex].driver
+                    );
+                    return x ? [...result, current[0]] : result;
+                  },
+                  []
+                ),
+                datasets: [
+                  {
+                    data: Object.values(data).reduce(
+                      (result: number[], current) => {
+                        const x = current.drivers.find(
+                          (i) =>
+                            i.driver === data[year].drivers[currentIndex].driver
+                        );
+                        return x ? [...result, Number(x.pos)] : result;
+                      },
+                      []
+                    ),
+                    borderColor: "rgb(255, 99, 132)",
+                    backgroundColor: "rgba(255, 99, 132, 0.5)",
+                  },
+                ],
+              }}
+            />
+          </div>
         </div>
       )}
 
       {/* Teams */}
       {view === "teams" && (
         <div className="flex flex-col gap-10">
-          <Line
-            height={50}
-            options={{
-              plugins: {
-                title: {
-                  display: true,
-                  text: "Team postion from 1950 to 2023",
-                },
-              },
-              maintainAspectRatio: true,
-              scales: {
-                y: {
-                  reverse: true,
-                  beginAtZero: true,
-                  min: 0,
-                  ticks: {
-                    stepSize: 1,
-                  },
-                },
-                x: {
-                  ticks: {
-                    callback(tickValue, index, ticks) {
-                      return "";
-                    },
-                  },
-                },
-              },
-            }}
-            data={{
-              labels: Object.keys(data),
-              datasets: [
-                {
-                  data: Object.values(data).map((item) => {
-                    const x = item.teams.find(
-                      (i) => i.team === data[year].teams[currentIndex].team
-                    );
-                    return Number(x?.pos) || "";
-                  }),
-                  borderColor: "rgb(255, 99, 132)",
-                  backgroundColor: "rgba(255, 99, 132, 0.5)",
-                },
-              ],
-            }}
-          />
-
+          {/* Overview */}
           <Table title={`${year} Constructor Standings`}>
             <THead>
               <TRow>
@@ -350,6 +357,8 @@ export default function App() {
               )}
             </TBody>
           </Table>
+
+          {/* Detail */}
           <Table
             title={`${year} Constructor Standings: ${data[year].teams[currentIndex]?.team}`}
           >
@@ -372,6 +381,41 @@ export default function App() {
               ))}
             </TBody>
           </Table>
+
+          {/* Chart */}
+          <div>
+            <p className="mb-2 uppercase text-xl font-bold">{`${data[year].teams[currentIndex]?.team} postion every year`}</p>
+            <Line
+              height={50}
+              options={options}
+              data={{
+                labels: Object.entries(data).reduce(
+                  (result: string[], current) => {
+                    const x = current[1].teams.find(
+                      (i) => i.team === data[year].teams[currentIndex].team
+                    );
+                    return x ? [...result, current[0]] : result;
+                  },
+                  []
+                ),
+                datasets: [
+                  {
+                    data: Object.values(data).reduce(
+                      (result: number[], current) => {
+                        const x = current.teams.find(
+                          (i) => i.team === data[year].teams[currentIndex].team
+                        );
+                        return x ? [...result, Number(x.pos)] : result;
+                      },
+                      []
+                    ),
+                    borderColor: "rgb(255, 99, 132)",
+                    backgroundColor: "rgba(255, 99, 132, 0.5)",
+                  },
+                ],
+              }}
+            />
+          </div>
         </div>
       )}
 
@@ -389,9 +433,13 @@ export default function App() {
           <TBody>
             {data[year].dhlFastestLaps.map((dhl, index) => (
               <TRow key={index}>
-                <TData>{dhl.grandPrix}</TData>
-                <TData>{dhl.driver}</TData>
-                <TData>{dhl.car}</TData>
+                <TData onClick={handleClick("races", dhl.grandPrix)}>
+                  {dhl.grandPrix}
+                </TData>
+                <TData onClick={handleClick("drivers", dhl.driver)}>
+                  {dhl.driver}
+                </TData>
+                <TData onClick={handleClick("teams", dhl.car)}>{dhl.car}</TData>
                 <TData>{dhl.time}</TData>
               </TRow>
             ))}
